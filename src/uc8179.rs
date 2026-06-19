@@ -24,7 +24,54 @@ const CMD_WRITE_RAM_NEW: u8 = 0x13;
 const CMD_VCOM_INTERVAL: u8 = 0x50;
 const CMD_TCON: u8 = 0x60;
 const CMD_RESOLUTION: u8 = 0x61;
-const CMD_PARTIAL_OUT: u8 = 0x92;
+const CMD_LUT_VCOM: u8 = 0x20;
+const CMD_LUT_WW: u8 = 0x21;
+const CMD_LUT_BW: u8 = 0x22;
+const CMD_LUT_WB: u8 = 0x23;
+const CMD_LUT_BB: u8 = 0x24;
+const CMD_LUT_BD: u8 = 0x25;
+const CMD_PARTIAL_WINDOW: u8 = 0x90;
+const CMD_VCOM_DC: u8 = 0x82;
+
+// partial refresh LUTs from GxEPD2 (GDEW075T7).
+// format: [waveform, T1, T2, T3, T4, repeat, ...zeros to 42 bytes]
+// T1=30, T2=5, T3=30, T4=5 — two drive phases with short pauses.
+#[rustfmt::skip]
+const LUT_PARTIAL_VCOM: [u8; 42] = [
+    0x00, 30, 5, 30, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+];
+#[rustfmt::skip]
+const LUT_PARTIAL_WW: [u8; 42] = [
+    0x00, 30, 5, 30, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+];
+#[rustfmt::skip]
+const LUT_PARTIAL_BW: [u8; 42] = [
+    0x5A, 30, 5, 30, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+];
+#[rustfmt::skip]
+const LUT_PARTIAL_WB: [u8; 42] = [
+    0x84, 30, 5, 30, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+];
+#[rustfmt::skip]
+const LUT_PARTIAL_BB: [u8; 42] = [
+    0x00, 30, 5, 30, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+];
+#[rustfmt::skip]
+const LUT_PARTIAL_BD: [u8; 42] = [
+    0x00, 30, 5, 30, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+];
 
 #[derive(Debug)]
 pub enum Error<S, P> {
@@ -127,7 +174,7 @@ where
         self.cmd_with(CMD_PANEL_SETTING, &[0x1f])?;
         self.cmd_with(CMD_RESOLUTION, &[0x03, 0x20, 0x01, 0xE0])?;
         self.cmd_with(0x15, &[0x00])?;
-        self.cmd_with(CMD_VCOM_INTERVAL, &[0x21, 0x07])?;
+        self.cmd_with(CMD_VCOM_INTERVAL, &[0x29, 0x07])?;
         self.cmd_with(CMD_TCON, &[0x22])?;
         Ok(())
     }
@@ -158,19 +205,42 @@ where
         self.write_framebuffer()?;
         self.send_init_sequence()?;
 
-        self.cmd(CMD_PARTIAL_OUT)?;
         self.cmd(CMD_DISPLAY_REFRESH)?;
         self.wait_busy("refresh", 30000);
         println!("uc8179: full flush done");
         Ok(())
     }
 
-    // skips the full init re-send — updates pixels in place without a
-    // full clear cycle, so no flicker but may ghost over time.
+    // uses register LUTs with a partial waveform — only changed pixels
+    // are driven. may ghost over time; use flush() periodically.
     pub fn flush_partial(&mut self) -> Result<(), Error<SPI::Error, CS::Error>> {
         println!("uc8179: partial flush start");
 
+        self.send_init_sequence()?;
+
+        // override to register LUT mode (bit 5 = 1)
+        self.cmd_with(CMD_PANEL_SETTING, &[0x3f])?;
+        self.cmd_with(CMD_VCOM_DC, &[0x26])?;
+        // N2OCP=1 (bit 4) for new→old RAM copy, BDV=11 for LUTBD border
+        self.cmd_with(CMD_VCOM_INTERVAL, &[0x39, 0x07])?;
+
+        self.cmd_with(CMD_LUT_VCOM, &LUT_PARTIAL_VCOM)?;
+        self.cmd_with(CMD_LUT_WW, &LUT_PARTIAL_WW)?;
+        self.cmd_with(CMD_LUT_BW, &LUT_PARTIAL_BW)?;
+        self.cmd_with(CMD_LUT_WB, &LUT_PARTIAL_WB)?;
+        self.cmd_with(CMD_LUT_BB, &LUT_PARTIAL_BB)?;
+        self.cmd_with(CMD_LUT_BD, &LUT_PARTIAL_BD)?;
+
         self.write_framebuffer()?;
+
+        #[rustfmt::skip]
+        self.cmd_with(CMD_PARTIAL_WINDOW, &[
+            0x00, 0x00,       // x start
+            0x03, 0x1F,       // x end (799)
+            0x00, 0x00,       // y start
+            0x01, 0xDF,       // y end (479)
+            0x01,             // scan inside partial area only
+        ])?;
 
         self.cmd(CMD_DISPLAY_REFRESH)?;
         self.wait_busy("refresh", 30000);
