@@ -136,6 +136,8 @@ async fn main(spawner: Spawner) -> ! {
     );
     let dns_client = DnsSocket::new(stack);
 
+    let mut current_hash: u64 = 0;
+
     loop {
         println!("fetch: requesting framebuffer from {}", SERVER_URL);
 
@@ -146,10 +148,18 @@ async fn main(spawner: Spawner) -> ! {
 
         match fetch_framebuffer(&mut client, &mut rx_buf, fb).await {
             Ok(()) => {
-                println!("fetch: flushing to display");
-                match display.flush() {
-                    Ok(()) => println!("fetch: display updated"),
-                    Err(e) => println!("fetch: flush failed: {:?}", e),
+                let new_hash = fnv1a(fb);
+                if new_hash != current_hash {
+                    println!("fetch: image changed, refreshing display");
+                    match display.flush() {
+                        Ok(()) => {
+                            current_hash = new_hash;
+                            println!("fetch: display updated");
+                        }
+                        Err(e) => println!("fetch: flush failed: {:?}", e),
+                    }
+                } else {
+                    println!("fetch: image unchanged, skipping refresh");
                 }
             }
             Err(e) => println!("fetch: failed: {}", e),
@@ -202,6 +212,15 @@ async fn fetch_framebuffer<'a>(
     }
 
     Ok(())
+}
+
+fn fnv1a(data: &[u8]) -> u64 {
+    let mut hash: u64 = 0xcbf29ce484222325;
+    for &b in data {
+        hash ^= b as u64;
+        hash = hash.wrapping_mul(0x100000001b3);
+    }
+    hash
 }
 
 #[embassy_executor::task]
