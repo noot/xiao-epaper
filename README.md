@@ -12,30 +12,60 @@ UC8179 display driver and example firmwares for the 800x480 e-ink display, using
 
 ## Prerequisites
 
-Install the Rust toolchain and `espflash`:
+Install the Rust toolchain, `espflash`, and `just`:
 
 ```sh
 rustup target add riscv32imc-unknown-none-elf
 cargo install espflash
+cargo install just
+```
+
+## Setup
+
+```sh
+cp .env.example .env
+# edit .env with your wifi credentials and server IP
 ```
 
 ## Examples
+
+Connect the XIAO panel via USB-C. All examples flash the firmware and open a serial monitor.
 
 ### demo
 
 Draws text, shapes, and a checkerboard pattern.
 
 ```sh
-cargo run --release --example demo
+just demo
 ```
 
-Connect the XIAO panel via USB-C — this flashes the firmware and opens a serial monitor. If the device isn't detected automatically, specify the port:
+### png
+
+Renders a PNG image from `assets/image.png`. The build script converts it to 1bpp with Floyd-Steinberg dithering at compile time.
 
 ```sh
-espflash flash --monitor --chip esp32c3 target/riscv32imc-unknown-none-elf/release/examples/demo --port /dev/ttyACM0
+just png
 ```
 
-The display should refresh after a few seconds.
+### wifi
+
+Connects to wifi, fetches a pre-rendered framebuffer from the image server, and displays it. Refreshes every 60 seconds. Requires `SSID`, `PASSWORD`, and `SERVER_URL` in `.env`.
+
+```sh
+just server   # in one terminal
+just wifi     # in another
+```
+
+## Image Server
+
+A standalone axum server that converts a PNG to a 1bpp framebuffer and serves it over HTTP.
+
+```sh
+just server                        # serves assets/image.png
+just server ~/Pictures/photo.png   # serves a specific image
+```
+
+Listens on `0.0.0.0:3000`. The firmware fetches from `GET /framebuffer`.
 
 ## Troubleshooting
 

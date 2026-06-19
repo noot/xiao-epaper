@@ -148,6 +148,10 @@ where
         self.fb.copy_from_slice(data);
     }
 
+    pub fn framebuffer_mut(&mut self) -> &mut [u8; FB_SIZE] {
+        self.fb
+    }
+
     pub fn flush(&mut self) -> Result<(), Error<SPI::Error, CS::Error>> {
         println!("uc8179: flush start");
 
