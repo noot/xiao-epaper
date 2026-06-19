@@ -8,9 +8,9 @@ demo:
 png:
     cargo run --release --example png
 
-# flash the wifi example (fetches framebuffer from server)
-wifi:
-    cargo run --release --example wifi --features wifi
+# flash the fetch example (fetches framebuffer from server)
+fetch:
+    cargo run --release --example fetch --features wifi
 
 # run the image server (default: assets/image.png)
 server image=(justfile_directory() / "assets/image.png"):
@@ -19,7 +19,7 @@ server image=(justfile_directory() / "assets/image.png"):
 # check all firmware examples compile
 check:
     cargo c --examples
-    SSID=check PASSWORD=check SERVER_URL=http://check cargo c --example wifi --features wifi
+    SSID=check PASSWORD=check SERVER_URL=http://check cargo c --example fetch --features wifi
 
 # format and lint everything
 lint:

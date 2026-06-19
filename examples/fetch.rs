@@ -137,6 +137,8 @@ async fn main(spawner: Spawner) -> ! {
     let dns_client = DnsSocket::new(stack);
 
     let mut current_hash: u64 = 0;
+    let mut refresh_count: u32 = 0;
+    const FULL_REFRESH_INTERVAL: u32 = 5;
 
     loop {
         println!("fetch: requesting framebuffer from {}", SERVER_URL);
@@ -150,10 +152,18 @@ async fn main(spawner: Spawner) -> ! {
             Ok(()) => {
                 let new_hash = fnv1a(fb);
                 if new_hash != current_hash {
-                    println!("fetch: image changed, refreshing display");
-                    match display.flush() {
+                    let full = refresh_count % FULL_REFRESH_INTERVAL == 0;
+                    let result = if full {
+                        println!("fetch: full refresh");
+                        display.flush()
+                    } else {
+                        println!("fetch: partial refresh");
+                        display.flush_partial()
+                    };
+                    match result {
                         Ok(()) => {
                             current_hash = new_hash;
+                            refresh_count += 1;
                             println!("fetch: display updated");
                         }
                         Err(e) => println!("fetch: flush failed: {:?}", e),

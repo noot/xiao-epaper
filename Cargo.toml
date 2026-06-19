@@ -34,7 +34,7 @@ embedded-io-async = { version = "0.7", optional = true }
 wifi = ["dep:esp-radio", "dep:esp-rtos", "dep:esp-alloc", "dep:embassy-executor", "dep:embassy-net", "dep:embassy-time", "dep:reqwless", "dep:static_cell", "dep:log", "dep:embedded-io-async"]
 
 [[example]]
-name = "wifi"
+name = "fetch"
 required-features = ["wifi"]
 
 [build-dependencies]

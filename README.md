@@ -47,13 +47,13 @@ Renders a PNG image from `assets/image.png`. The build script converts it to 1bp
 just png
 ```
 
-### wifi
+### fetch
 
-Connects to wifi, fetches a pre-rendered framebuffer from the image server, and displays it. Refreshes every 60 seconds. Requires `SSID`, `PASSWORD`, and `SERVER_URL` in `.env`.
+Connects to wifi, fetches a pre-rendered framebuffer from the image server, and displays it. Partial refresh every minute, full refresh every 5 minutes to clear ghosting. Requires `SSID`, `PASSWORD`, and `SERVER_URL` in `.env`.
 
 ```sh
 just server   # in one terminal
-just wifi     # in another
+just fetch    # in another
 ```
 
 ## Image Server

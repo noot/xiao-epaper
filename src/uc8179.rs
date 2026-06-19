@@ -153,8 +153,32 @@ where
     }
 
     pub fn flush(&mut self) -> Result<(), Error<SPI::Error, CS::Error>> {
-        println!("uc8179: flush start");
+        println!("uc8179: full flush start");
 
+        self.write_framebuffer()?;
+        self.send_init_sequence()?;
+
+        self.cmd(CMD_PARTIAL_OUT)?;
+        self.cmd(CMD_DISPLAY_REFRESH)?;
+        self.wait_busy("refresh", 30000);
+        println!("uc8179: full flush done");
+        Ok(())
+    }
+
+    // skips the full init re-send — updates pixels in place without a
+    // full clear cycle, so no flicker but may ghost over time.
+    pub fn flush_partial(&mut self) -> Result<(), Error<SPI::Error, CS::Error>> {
+        println!("uc8179: partial flush start");
+
+        self.write_framebuffer()?;
+
+        self.cmd(CMD_DISPLAY_REFRESH)?;
+        self.wait_busy("refresh", 30000);
+        println!("uc8179: partial flush done");
+        Ok(())
+    }
+
+    fn write_framebuffer(&mut self) -> Result<(), Error<SPI::Error, CS::Error>> {
         self.cmd(CMD_WRITE_RAM_NEW)?;
         self.dc.set_high().map_err(Error::Pin)?;
         self.cs.set_low().map_err(Error::Pin)?;
@@ -163,13 +187,6 @@ where
             self.spi.flush().map_err(Error::Spi)?;
         }
         self.cs.set_high().map_err(Error::Pin)?;
-
-        self.send_init_sequence()?;
-
-        self.cmd(CMD_PARTIAL_OUT)?;
-        self.cmd(CMD_DISPLAY_REFRESH)?;
-        self.wait_busy("refresh", 30000);
-        println!("uc8179: flush done");
         Ok(())
     }
 
