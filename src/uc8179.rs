@@ -11,10 +11,10 @@ use embedded_hal::digital::{InputPin, OutputPin};
 use embedded_hal::spi::SpiBus;
 use esp_println::println;
 
-pub(crate) const WIDTH: u32 = 800;
-pub(crate) const HEIGHT: u32 = 480;
+const WIDTH: u32 = 800;
+const HEIGHT: u32 = 480;
 const ROW_BYTES: usize = (WIDTH as usize) / 8;
-pub(crate) const FB_SIZE: usize = ROW_BYTES * HEIGHT as usize;
+pub const FB_SIZE: usize = ROW_BYTES * HEIGHT as usize;
 
 const CMD_PANEL_SETTING: u8 = 0x00;
 const CMD_POWER_SETTING: u8 = 0x01;
@@ -27,12 +27,12 @@ const CMD_RESOLUTION: u8 = 0x61;
 const CMD_PARTIAL_OUT: u8 = 0x92;
 
 #[derive(Debug)]
-pub(crate) enum Error<S, P> {
+pub enum Error<S, P> {
     Spi(S),
     Pin(P),
 }
 
-pub(crate) struct Uc8179<'a, SPI, CS, DC, RST, BUSY, DELAY> {
+pub struct Uc8179<'a, SPI, CS, DC, RST, BUSY, DELAY> {
     spi: SPI,
     cs: CS,
     dc: DC,
@@ -51,7 +51,7 @@ where
     BUSY: InputPin<Error = CS::Error>,
     DELAY: DelayNs,
 {
-    pub(crate) fn new(
+    pub fn new(
         spi: SPI,
         cs: CS,
         dc: DC,
@@ -132,7 +132,7 @@ where
         Ok(())
     }
 
-    pub(crate) fn init(&mut self) -> Result<(), Error<SPI::Error, CS::Error>> {
+    pub fn init(&mut self) -> Result<(), Error<SPI::Error, CS::Error>> {
         println!("uc8179: hardware reset");
         self.reset()?;
         self.wait_busy("reset", 5000);
@@ -140,11 +140,11 @@ where
         Ok(())
     }
 
-    pub(crate) fn clear_white(&mut self) {
+    pub fn clear_white(&mut self) {
         self.fb.fill(0xFF);
     }
 
-    pub(crate) fn flush(&mut self) -> Result<(), Error<SPI::Error, CS::Error>> {
+    pub fn flush(&mut self) -> Result<(), Error<SPI::Error, CS::Error>> {
         println!("uc8179: flush start");
 
         self.cmd(CMD_WRITE_RAM_NEW)?;

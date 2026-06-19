@@ -4,6 +4,10 @@ name         = "xiao-epaper"
 rust-version = "1.88"
 version      = "0.1.0"
 
+[lib]
+name = "xiao_epaper"
+path = "./src/lib.rs"
+
 [[bin]]
 name = "xiao-epaper"
 path = "./src/main.rs"
