@@ -142,7 +142,6 @@ async fn main(spawner: Spawner) -> ! {
         let mut client = HttpClient::new(&tcp_client, &dns_client);
         let mut rx_buf = [0u8; 4096];
 
-        display.clear_white();
         let fb = display.framebuffer_mut();
 
         match fetch_framebuffer(&mut client, &mut rx_buf, fb).await {

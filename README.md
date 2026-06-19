@@ -65,7 +65,7 @@ just server                        # serves assets/image.png
 just server ~/Pictures/photo.png   # serves a specific image
 ```
 
-Listens on `0.0.0.0:3000`. The firmware fetches from `GET /framebuffer`.
+Listens on `0.0.0.0:3000` by default. Set `PORT` in `.env` to change it (and update `SERVER_URL` to match). The firmware fetches from `GET /framebuffer`.
 
 ## Troubleshooting
 
