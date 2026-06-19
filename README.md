@@ -2,7 +2,7 @@
 
 Rust `no_std` firmware for the [Seeed Studio XIAO 7.5" ePaper Panel](https://www.seeedstudio.com/XIAO-7-5-ePaper-Panel-p-6416.html).
 
-Draws a demo image (text, shapes, checkerboard) on the 800x480 e-ink display using `esp-hal` and `embedded-graphics`.
+UC8179 display driver and example firmwares for the 800x480 e-ink display, using `esp-hal` and `embedded-graphics`.
 
 ## Hardware
 
@@ -19,27 +19,23 @@ rustup target add riscv32imc-unknown-none-elf
 cargo install espflash
 ```
 
-## Build
+## Examples
+
+### demo
+
+Draws text, shapes, and a checkerboard pattern.
 
 ```sh
-cargo build --release
+cargo run --release --example demo
 ```
 
-## Flash
-
-Connect the XIAO panel via USB-C, then:
+Connect the XIAO panel via USB-C — this flashes the firmware and opens a serial monitor. If the device isn't detected automatically, specify the port:
 
 ```sh
-cargo run --release
+espflash flash --monitor --chip esp32c3 target/riscv32imc-unknown-none-elf/release/examples/demo --port /dev/ttyACM0
 ```
 
-This flashes the firmware and opens a serial monitor. If the device isn't detected automatically, specify the port:
-
-```sh
-espflash flash --monitor --chip esp32c3 target/riscv32imc-unknown-none-elf/release/xiao-epaper --port /dev/ttyACM0
-```
-
-The display should refresh after a few seconds with the demo image.
+The display should refresh after a few seconds.
 
 ## Troubleshooting
 
