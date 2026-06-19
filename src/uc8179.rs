@@ -144,6 +144,10 @@ where
         self.fb.fill(0xFF);
     }
 
+    pub fn load_raw(&mut self, data: &[u8; FB_SIZE]) {
+        self.fb.copy_from_slice(data);
+    }
+
     pub fn flush(&mut self) -> Result<(), Error<SPI::Error, CS::Error>> {
         println!("uc8179: flush start");
 

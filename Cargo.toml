@@ -19,6 +19,9 @@ embedded-hal = "1.0.0"
 embedded-graphics = "0.8.1"
 esp-println = { version = "0.17.0", default-features = false, features = ["esp32c3", "jtag-serial"] }
 
+[build-dependencies]
+image = { version = "0.25", default-features = false, features = ["png"] }
+
 [profile.dev]
 opt-level = "s"
 
