@@ -48,7 +48,7 @@ const SERVER_URL: &str = env!("SERVER_URL");
 const REFRESH_INTERVAL_SECS: u64 = 60;
 
 /// Do a full refresh every N wakes to clear ghosting
-const FULL_REFRESH_EVERY: u32 = 10;
+const FULL_REFRESH_EVERY: u32 = 30;
 
 macro_rules! mk_static {
     ($t:ty, $val:expr) => {{
