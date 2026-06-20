@@ -74,7 +74,10 @@ async fn main(spawner: Spawner) -> ! {
     let reason = reset_reason(Cpu::ProCpu);
     let wake = wakeup_cause();
     let wake_count = unsafe { WAKE_COUNT };
-    println!("boot: reset={:?} wake={:?} count={}", reason, wake, wake_count);
+    println!(
+        "boot: reset={:?} wake={:?} count={}",
+        reason, wake, wake_count
+    );
 
     let timg0 = TimerGroup::new(peripherals.TIMG0);
     let sw_int = SoftwareInterruptControl::new(peripherals.SW_INTERRUPT);
@@ -179,7 +182,9 @@ async fn main(spawner: Spawner) -> ! {
     }
 
     // ── Deep sleep ──────────────────────────────────────────────
-    unsafe { WAKE_COUNT = wake_count + 1; }
+    unsafe {
+        WAKE_COUNT = wake_count + 1;
+    }
 
     println!("sleep: entering deep sleep for {}s", REFRESH_INTERVAL_SECS);
     // Small delay to let UART flush
@@ -200,10 +205,7 @@ async fn fetch_framebuffer<'a>(
         .await
         .map_err(|_| "request create failed")?;
 
-    let response = builder
-        .send(rx_buf)
-        .await
-        .map_err(|_| "send failed")?;
+    let response = builder.send(rx_buf).await.map_err(|_| "send failed")?;
 
     let status = response.status.0;
     if status != 200 {
@@ -220,7 +222,9 @@ async fn fetch_framebuffer<'a>(
             .read(&mut fb[offset..])
             .await
             .map_err(|_| "read error")?;
-        if n == 0 { break; }
+        if n == 0 {
+            break;
+        }
         offset += n;
     }
 
